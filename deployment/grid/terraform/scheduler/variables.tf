@@ -198,3 +198,13 @@ variable "local_services_port" {
 variable "redis_port" {
   description = "Port for Redis instance"
 }
+
+variable "retention_in_days" {
+  description = "Retention in days for cloudwatch logs"
+  type =  number
+}
+
+variable "kms_key_arn" {
+  description = "KMS key ARN for S3 bucket"
+  type =  string
+}

@@ -89,8 +89,8 @@ EOF
 module "submit_task" {
   depends_on = [
     kubernetes_service.local_services,
-    aws_iam_role_policy_attachment.lambda_logs_attachment,
-    aws_cloudwatch_log_group.submit_task_logs
+    #aws_iam_role_policy_attachment.lambda_logs_attachment,
+    #aws_cloudwatch_log_group.submit_task_logs
   ]
   source  = "terraform-aws-modules/lambda/aws"
   version = "v2.4.0"
@@ -128,14 +128,13 @@ module "submit_task" {
 # 
 #   vpc_subnet_ids = var.vpc_private_subnet_ids
 #   vpc_security_group_ids = [var.vpc_default_security_group_id]
-  use_existing_cloudwatch_log_group = true
+  #use_existing_cloudwatch_log_group = true
 
   environment_variables  = {
     TASKS_STATUS_TABLE_NAME=aws_dynamodb_table.htc_tasks_status_table.name,
     TASKS_STATUS_TABLE_SERVICE=var.tasks_status_table_service,
     TASKS_STATUS_TABLE_CONFIG=var.tasks_status_table_config,
-    #TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
-    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue.name,
+    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
     TASKS_QUEUE_DLQ_NAME=aws_sqs_queue.htc_task_queue_dlq.name,
     METRICS_ARE_ENABLED=var.metrics_are_enabled,
     METRICS_SUBMIT_TASKS_LAMBDA_CONNECTION_STRING=var.metrics_submit_tasks_lambda_connection_string,
@@ -165,8 +164,8 @@ module "submit_task" {
 module  "get_results" {
   depends_on = [
     kubernetes_service.local_services,
-    aws_iam_role_policy_attachment.lambda_logs_attachment,
-    aws_cloudwatch_log_group.get_results_logs
+    #aws_iam_role_policy_attachment.lambda_logs_attachment,
+    #aws_cloudwatch_log_group.get_results_logs
   ]
   source  = "terraform-aws-modules/lambda/aws"
   version = "v2.4.0"
@@ -203,15 +202,14 @@ module  "get_results" {
 #   lambda_role = aws_iam_role.role_lambda_get_results.arn
 #   vpc_subnet_ids = var.vpc_private_subnet_ids
 #   vpc_security_group_ids = [var.vpc_default_security_group_id]
-  use_existing_cloudwatch_log_group = true
+  #use_existing_cloudwatch_log_group = true
 
 
   environment_variables = {
     TASKS_STATUS_TABLE_NAME=aws_dynamodb_table.htc_tasks_status_table.name,
     TASKS_STATUS_TABLE_SERVICE=var.tasks_status_table_service,
     TASKS_STATUS_TABLE_CONFIG=var.tasks_status_table_config,
-    #TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
-    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue.name,
+    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
     S3_BUCKET=aws_s3_bucket.htc-stdout-bucket.id,
     REDIS_URL = "redis",
     GRID_STORAGE_SERVICE=var.grid_storage_service,
@@ -239,8 +237,8 @@ module  "get_results" {
 module "cancel_tasks" {
   depends_on = [
     kubernetes_service.local_services,
-    aws_iam_role_policy_attachment.lambda_logs_attachment,
-    aws_cloudwatch_log_group.cancel_tasks_logs
+    #aws_iam_role_policy_attachment.lambda_logs_attachment,
+    #aws_cloudwatch_log_group.cancel_tasks_logs
   ]
   source  = "terraform-aws-modules/lambda/aws"
   version = "v2.4.0"
@@ -278,14 +276,13 @@ module "cancel_tasks" {
 #
 #   vpc_subnet_ids = var.vpc_private_subnet_ids
 #   vpc_security_group_ids = [var.vpc_default_security_group_id]
-  use_existing_cloudwatch_log_group = true
+  #use_existing_cloudwatch_log_group = true
 
   environment_variables  = {
     TASKS_STATUS_TABLE_NAME=aws_dynamodb_table.htc_tasks_status_table.name,
     TASKS_STATUS_TABLE_SERVICE=var.tasks_status_table_service,
     TASKS_STATUS_TABLE_CONFIG=var.tasks_status_table_config,
-    #TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
-    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue.name,
+    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
     TASKS_QUEUE_DLQ_NAME=aws_sqs_queue.htc_task_queue_dlq.name,
     METRICS_ARE_ENABLED=var.metrics_are_enabled,
     METRICS_CANCEL_TASKS_LAMBDA_CONNECTION_STRING=var.metrics_cancel_tasks_lambda_connection_string,
@@ -363,10 +360,11 @@ module "ttl_checker" {
     TASKS_STATUS_TABLE_NAME=aws_dynamodb_table.htc_tasks_status_table.name,
     TASKS_STATUS_TABLE_SERVICE=var.tasks_status_table_service,
     TASKS_STATUS_TABLE_CONFIG=var.tasks_status_table_config,
-    #TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
-    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue.name,
+    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue["__0"].name,
     TASKS_QUEUE_DLQ_NAME=aws_sqs_queue.htc_task_queue_dlq.name
     METRICS_ARE_ENABLED=var.metrics_are_enabled,
+    GRID_QUEUE_SERVICE = var.grid_queue_service,
+    GRID_QUEUE_CONFIG = var.grid_queue_config,
     METRICS_TTL_CHECKER_LAMBDA_CONNECTION_STRING=var.metrics_ttl_checker_lambda_connection_string,
     ERROR_LOG_GROUP=var.error_log_group,
     ERROR_LOGGING_STREAM=var.error_logging_stream,
@@ -384,6 +382,7 @@ module "ttl_checker" {
   }
 }
 
+/*
 resource "aws_cloudwatch_log_group" "submit_task_logs" {
   depends_on = [kubernetes_service.local_services]
   name = "/aws/lambda/${var.lambda_name_submit_tasks}"
@@ -401,8 +400,7 @@ resource "aws_cloudwatch_log_group" "cancel_tasks_logs" {
   name = "/aws/lambda/${var.lambda_name_cancel_tasks}"
   retention_in_days = 5
 }
-
-
+*/
 resource "aws_cloudwatch_log_group" "ttl_log" {
   depends_on = [kubernetes_service.local_services]
   name = "/aws/lambda/${var.lambda_name_ttl_checker}"
@@ -421,7 +419,6 @@ resource "aws_cloudwatch_event_target" "ttl_checker_event_target" {
   depends_on = [kubernetes_service.local_services]
   rule      = aws_cloudwatch_event_rule.ttl_checker_event_rule.name
   target_id = "lambda"
-  #arn       = module.ttl_checker.this_lambda_function_arn
   arn       = module.ttl_checker.lambda_function_arn
 }
 
@@ -429,7 +426,6 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_ttl_checker_lambda" {
   depends_on = [kubernetes_service.local_services]
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  #function_name = module.ttl_checker.this_lambda_function_name
   function_name = module.ttl_checker.lambda_function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.ttl_checker_event_rule.arn
@@ -573,3 +569,45 @@ resource "aws_iam_role_policy_attachment" "ttl_checker_lambda_data_attachment" {
   role       = aws_iam_role.role_lambda_ttl_checker.name
   policy_arn = aws_iam_policy.lambda_data_policy.arn
 }
+
+/*
+data "aws_iam_policy_document" "decrypt_object" {
+    statement {
+      sid= "KMSAccess"
+      actions = [
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+      ]
+      effect = "Allow"
+      resources = [var.kms_key_arn]
+    }
+}
+
+resource "aws_iam_policy" "decrypt_object" {
+  name_prefix = "decrypt-lambda"
+  description = "Policy for alowing decryption of encrypted value"
+  policy      = data.aws_iam_policy_document.decrypt_object.json
+}
+
+resource "aws_iam_role_policy_attachment" "decrypt_object_submit_task" {
+  role       = aws_iam_role.role_lambda_submit_task.name
+  policy_arn = aws_iam_policy.decrypt_object.arn
+}
+
+
+resource "aws_iam_role_policy_attachment" "decrypt_object_get_result" {
+  role       = aws_iam_role.role_lambda_get_results.name
+  policy_arn = aws_iam_policy.decrypt_object.arn
+}
+
+resource "aws_iam_role_policy_attachment" "decrypt_object_cancel_task" {
+  role       = aws_iam_role.role_lambda_cancel_tasks.name
+  policy_arn = aws_iam_policy.decrypt_object.arn
+}
+
+
+resource "aws_iam_role_policy_attachment" "decrypt_object_ttl_checker" {
+  role       = aws_iam_role.role_lambda_ttl_checker.name
+  policy_arn = aws_iam_policy.decrypt_object.arn
+}
+*/

@@ -456,3 +456,14 @@ variable "redis_port" {
   default = 6379
   type = number
 }
+
+variable "retention_in_days" {
+  description = "Retention in days for cloudwatch logs"
+  type =  number
+  default = 3
+}
+
+variable "kms_key_arn" {
+  description = "KMS key ARN for S3 bucket"
+  type =  string
+}

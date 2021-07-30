@@ -168,8 +168,8 @@ module "scheduler" {
     dynamodb_port = var.dynamodb_port
     local_services_port = var.local_services_port
     redis_port = var.redis_port
-
-
+    retention_in_days = var.retention_in_days
+    kms_key_arn = var.kms_key_arn
 }
 
 
