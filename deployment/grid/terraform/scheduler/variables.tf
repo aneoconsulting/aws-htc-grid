@@ -190,3 +190,27 @@ variable "cancel_tasks_port" {
 variable "cancel_tasks_image" {
   description = "Name of cancel_tasks Lambda RIE image"
 }
+
+variable "submit_task_port" {
+  description = "Port for Submit Task Lambda function"  
+}
+
+variable "submit_task_image" {
+  description = "Name of submit_task Lambda RIE image"
+}
+
+variable "get_results_port" {
+  description = "Port for Get Results Lambda function"  
+}
+
+variable "get_results_image" {
+  description = "Name of get_results Lambda RIE image"
+}
+
+variable "ttl_checker_port" {
+  description = "Port for TTL Checker Lambda function"  
+}
+
+variable "ttl_checker_image" {
+  description = "Name of ttl_checker Lambda RIE image"
+}
