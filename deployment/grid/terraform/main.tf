@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Licensed under the Apache License, Version 2.0 https://aws.amazon.com/apache-2-0/
 
-data aws_caller_identity current {}
+#data aws_caller_identity current {}
 
 resource "random_string" "random_resources" {
     length = 5
@@ -12,7 +12,7 @@ resource "random_string" "random_resources" {
 }
 
 locals {
-    aws_htc_ecr = var.aws_htc_ecr != "" ? var.aws_htc_ecr : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com"
+    aws_htc_ecr = var.aws_htc_ecr
     project_name = var.project_name != "" ? var.project_name : random_string.random_resources.result
     cluster_name = "${var.cluster_name}-${local.project_name}"
     ddb_status_table = "${var.ddb_status_table}-${local.project_name}"
@@ -163,8 +163,14 @@ module "scheduler" {
     dynamodb_port = var.dynamodb_port
     local_services_port = var.local_services_port
     redis_port = var.redis_port
-
-
+    submit_task_image = var.submit_task_image
+    submit_task_port = var.submit_task_port
+    cancel_tasks_image = var.cancel_tasks_image
+    cancel_tasks_port = var.cancel_tasks_port
+    get_results_image = var.get_results_image
+    get_results_port = var.get_results_port
+    ttl_checker_image = var.ttl_checker_image
+    ttl_checker_port = var.ttl_checker_port
 }
 
 
