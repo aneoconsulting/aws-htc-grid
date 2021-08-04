@@ -452,3 +452,36 @@ variable "cancel_tasks_image" {
   description = "Name of cancel_tasks Lambda RIE image"
   type = string
 }
+
+variable "submit_task_port" {
+  description = "Port for Submit Task Lambda function"
+  type = number
+  default = 9001
+}
+
+variable "submit_task_image" {
+  description = "Name of submit_task Lambda RIE image"
+  type = string
+}
+
+variable "get_results_port" {
+  description = "Port for Get Results Lambda function"
+  type = number
+  default = 9002
+}
+
+variable "get_results_image" {
+  description = "Name of get_results Lambda RIE image"
+  type = string
+}
+
+variable "ttl_checker_port" {
+  description = "Port for TTL Checker Lambda function"
+  type = number
+  default = 9003
+}
+
+variable "ttl_checker_image" {
+  description = "Name of ttl_checker Lambda RIE image"
+  type = string
+}
