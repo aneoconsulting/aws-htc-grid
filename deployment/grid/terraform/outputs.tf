@@ -8,7 +8,7 @@ output "agent_config" {
 }
 
 
-output "private_api_endpoint" {
-  description = "Private API endpoint for the HTC grid"
-  value = module.scheduler.private_api_gateway_url
-}
+#output "private_api_endpoint" {
+#  description = "Private API endpoint for the HTC grid"
+#  value = module.scheduler.private_api_gateway_url
+#}
