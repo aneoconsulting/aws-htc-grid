@@ -292,6 +292,7 @@ class AWSConnector:
         logging.info("session_tasks_count: {}".format(session_tasks_count))
         while True:
             session_results = self.invoke_get_results_lambda({'session_id': submission_response['session_id']})
+            session_results = json.loads(session_results['body'])
             logging.info("session_results: {}".format(session_results))
             # print("session_results: {}".format(session_results))
 
@@ -339,7 +340,9 @@ class AWSConnector:
             query = {
                 "submission_content": str(session_id)
             }
-            raw_response = requests.post(url_base + '/submit', params=query, headers=self.__authorization_headers)
+            body = json.dumps({"queryStringParameters":query})
+            raw_response = requests.post(url_base + '/submit', data=body, headers=self.__authorization_headers)
+            #raw_response = requests.post(url_base + '/submit', params=query, headers=self.__authorization_headers)            
 
         else:
             submission_payload_string = base64.urlsafe_b64encode(json.dumps(jobs).encode('utf-8')).decode('utf-8')
@@ -381,7 +384,9 @@ class AWSConnector:
         query = {
             "submission_content": str(submission_payload_string)
         }
-        raw_response = requests.get(url_base + '/result', headers=self.__authorization_headers, params=query)
+        body = json.dumps({"queryStringParameters":query})
+        raw_response = requests.post(url_base + '/result', headers=self.__authorization_headers, data=body)
+        #raw_response = requests.get(url_base + '/result', headers=self.__authorization_headers, params=query)
 
         if raw_response.status_code != requests.codes.ok:
             logging.error("request {} not processed correctly {}".format(url_base, raw_response.status_code))
@@ -430,7 +435,9 @@ class AWSConnector:
         query = {
             "submission_content": str(submission_payload_string)
         }
-        raw_response = requests.post(url_base + '/cancel', headers=self.__authorization_headers, params=query)
+        body = json.dumps({"queryStringParameters":query})
+        raw_response = requests.post(url_base + '/cancel', headers=self.__authorization_headers, data=body)
+        #raw_response = requests.post(url_base + '/cancel', headers=self.__authorization_headers, params=query)
 
         if raw_response.status_code != requests.codes.ok:
             logging.error("request {} not processed correctly {}".format(url_base, raw_response.status_code))
