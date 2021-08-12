@@ -171,6 +171,7 @@ module "scheduler" {
     get_results_port = var.get_results_port
     ttl_checker_image = var.ttl_checker_image
     ttl_checker_port = var.ttl_checker_port
+    rsmq_port = var.rsmq_port
 }
 
 

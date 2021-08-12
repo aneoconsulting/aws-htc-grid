@@ -24,6 +24,8 @@ resource "kubernetes_config_map" "lambda_local" {
     AWS_ACCESS_KEY_ID = var.access_key,
     AWS_SECRET_ACCESS_KEY = var.secret_key,
     AWS_LAMBDA_FUNCTION_TIMEOUT = var.lambda_timeout,
+    RSMQ_PORT = var.rsmq_port,
+    SQS_ENDPOINT = "rsmq"
   }
 }
 
