@@ -5,7 +5,8 @@ locals {
   agent_config =<<EOF
 {
   "region": "${var.region}",
-  "sqs_endpoint": "http://local-services:${var.local_services_port}",
+  "sqs_endpoint": "rsmq",
+  "rsmq_port": "${var.rsmq_port}",
   "dynamodb_endpoint": "http://dynamodb:${var.dynamodb_port}",
   "sqs_queue": "${local.sqs_queue}",
   "sqs_dlq": "${local.sqs_dlq}",
