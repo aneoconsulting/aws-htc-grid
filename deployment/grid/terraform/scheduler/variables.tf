@@ -214,3 +214,7 @@ variable "ttl_checker_port" {
 variable "ttl_checker_image" {
   description = "Name of ttl_checker Lambda RIE image"
 }
+
+variable "rsmq_port" {
+  description = "Port for Redis SMQ"
+}

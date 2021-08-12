@@ -485,3 +485,9 @@ variable "ttl_checker_image" {
   description = "Name of ttl_checker Lambda RIE image"
   type = string
 }
+
+variable "rsmq_port" {
+  description = "Port for Redis SMQ"
+  type = number
+  default = 6380
+}
