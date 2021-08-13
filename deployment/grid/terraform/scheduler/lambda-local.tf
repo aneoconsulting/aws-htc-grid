@@ -5,8 +5,8 @@ resource "kubernetes_config_map" "lambda_local" {
 
   data = {
     TASKS_STATUS_TABLE_NAME=aws_dynamodb_table.htc_tasks_status_table.name,
-    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue.name,
-    TASKS_QUEUE_DLQ_NAME=aws_sqs_queue.htc_task_queue_dlq.name,
+    TASKS_QUEUE_NAME=var.sqs_queue,
+    TASKS_QUEUE_DLQ_NAME=var.sqs_dlq,
     METRICS_ARE_ENABLED=var.metrics_are_enabled,
     ERROR_LOG_GROUP=var.error_log_group,
     ERROR_LOGGING_STREAM=var.error_logging_stream,
