@@ -3,6 +3,8 @@
 # Licensed under the Apache License, Version 2.0 https://aws.amazon.com/apache-2-0/
 
 import boto3
+from rsmq import RedisSMQ
+from rsmq.cmd.exceptions import QueueAlreadyExists
 import time
 import os
 from botocore import endpoint
@@ -30,21 +32,34 @@ dynamodb = boto3.resource('dynamodb',
     aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
     )
 table = dynamodb.Table(os.environ['TASKS_STATUS_TABLE_NAME'])
-sqs_res = boto3.resource(
-    'sqs',
-    region_name=region,
-    endpoint_url=f'http://local-services:{sqs_port}',
-    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-    )
-sqs_cli = boto3.client(
-    'sqs',
-    endpoint_url=f'http://local-services:{sqs_port}',
-    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-    )
-queue = sqs_res.get_queue_by_name(QueueName=os.environ['TASKS_QUEUE_NAME'])
-dlq = sqs_res.get_queue_by_name(QueueName=os.environ['TASKS_QUEUE_DLQ_NAME'])
+#sqs_res = boto3.resource(
+#    'sqs',
+#    region_name=region,
+#    endpoint_url=f'http://local-services:{sqs_port}',
+#    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+#    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+#    )
+#sqs_cli = boto3.client(
+#    'sqs',
+#    endpoint_url=f'http://local-services:{sqs_port}',
+#    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+#    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+#    )
+#queue = sqs_res.get_queue_by_name(QueueName=os.environ['TASKS_QUEUE_NAME'])
+#dlq = sqs_res.get_queue_by_name(QueueName=os.environ['TASKS_QUEUE_DLQ_NAME'])
+
+queue = RedisSMQ(host=os.environ["SQS_ENDPOINT"], port=os.environ['RSMQ_PORT'], qname=os.environ['TASKS_QUEUE_NAME'])
+dlq = RedisSMQ(host=os.environ["SQS_ENDPOINT"], port=os.environ['RSMQ_PORT'], qname=os.environ['TASKS_QUEUE_DLQ_NAME'])
+
+try:
+    queue.createQueue(delay=0, vt=40).execute()
+except QueueAlreadyExists:
+    pass
+try:
+    dlq.createQueue(delay=0, vt=40).execute()
+except QueueAlreadyExists:
+    pass
+
 
 TTL_LAMBDA_ID = 'TTL_LAMBDA'
 TTL_LAMBDA_TMP_STATUS = TASK_STATUS_RETRYING
@@ -86,7 +101,7 @@ def lambda_handler(event, context):
         expired_tasks = retreive_expired_tasks(ddb_part_str)
         event_counter.increment("counter_expired_tasks", len(expired_tasks['Items']))
         event_counter.increment("counter_tasks_queue_size",
-                                int(queue.attributes.get('ApproximateNumberOfMessages')))
+                                int(queue.getQueueAttributes()['msgs']))
 
         print("Partition: {} expired tasks: {}".format(ddb_part_str, expired_tasks['Items']))
 
@@ -241,10 +256,11 @@ def delete_message_from_queue(sqs_handler_id):
 
     """
     try:
-        sqs_cli.delete_message(
-            QueueUrl=queue.url,
-            ReceiptHandle=sqs_handler_id
-        )
+        queue.deleteMessage(id=sqs_handler_id).execute()
+        #sqs_cli.delete_message(
+        #    QueueUrl=queue.url,
+        #    ReceiptHandle=sqs_handler_id
+        #)
     except ClientError as e:
         errlog.log("Cannot delete message {} : {}".format(sqs_handler_id, e))
         raise e
@@ -344,11 +360,12 @@ def reset_sqs_vto(handler_id):
 
     """
     try:
-        sqs_cli.change_message_visibility(
-            QueueUrl=queue.url,
-            ReceiptHandle=handler_id,
-            VisibilityTimeout=0
-        )
+        queue.changeMessageVisibility(id=handler_id, vt=0).execute()
+        #sqs_cli.change_message_visibility(
+        #    QueueUrl=queue.url,
+        #    ReceiptHandle=handler_id,
+        #    VisibilityTimeout=0
+        #)
     except ClientError as e:
         errlog.log("Cannot reset VTO for message {} : {}".format(handler_id, e))
         raise e
@@ -402,4 +419,5 @@ def send_to_dlq(task):
 
     """
     print("Sending task [{}] to DLQ".format(task))
-    dlq.send_message(MessageBody=str(task))
+    dlq.sendMessage(message=str(task)).execute()
+    # dlq.send_message(MessageBody=str(task))
