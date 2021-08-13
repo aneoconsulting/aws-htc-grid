@@ -5,6 +5,8 @@
 import json
 import base64
 import boto3
+from rsmq import RedisSMQ
+from rsmq.cmd.exceptions import QueueAlreadyExists
 import time
 import os
 import uuid
@@ -24,13 +26,18 @@ from api.in_out_manager import in_out_manager
 
 region = os.environ["REGION"]
 
-sqs = boto3.resource(
-    'sqs',
-    endpoint_url=f'http://local-services:{os.environ["SQS_PORT"]}',
-    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-    )
-queue = sqs.get_queue_by_name(QueueName=os.environ['TASKS_QUEUE_NAME'])
+queue = RedisSMQ(host=os.environ["SQS_ENDPOINT"], port=os.environ['RSMQ_PORT'], qname=os.environ['TASKS_QUEUE_NAME'])
+try:
+    queue.createQueue(delay=0, vt=40).execute()
+except QueueAlreadyExists:
+    pass
+#sqs = boto3.resource(
+#    'sqs',
+#    endpoint_url=f'http://local-services:{os.environ["SQS_PORT"]}',
+#    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+#    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+#    )
+#queue = sqs.get_queue_by_name(QueueName=os.environ['TASKS_QUEUE_NAME'])
 
 dynamodb = boto3.resource('dynamodb', 
     endpoint_url=f"http://dynamodb:{os.environ['DYNAMODB_PORT']}",
@@ -77,18 +84,20 @@ def write_to_sqs(sqs_batch_entries):
     Returns:
 
     """
-    try:
-        response = queue.send_messages(
-            Entries=sqs_batch_entries
-        )
-        if response.get('Failed') is not None:
-            # Should also send to DLQ
-            raise Exception('Batch write to SQS failed - check DLQ')
-    except Exception as e:
-        print("{}".format(e))
-        raise
-
-    return response
+    responses = []
+    for entry in sqs_batch_entries:
+        try:
+            response = queue.sendMessage(
+                message=entry
+            ).execute()
+            responses.append(response)
+            #if response.get('Failed') is not None:
+            #    # Should also send to DLQ
+            #    raise Exception('Batch write to SQS failed - check DLQ')
+        except Exception as e:
+            print("{}".format(e))
+            raise
+    return responses
 
 
 def get_time_now_ms():
