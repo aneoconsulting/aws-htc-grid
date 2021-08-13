@@ -339,7 +339,6 @@ def process_subprocess_completion(perf_tracker, task, sqs_msg, fname_stdout, std
             "We have succesfully marked task as completed in dynamodb."
             " Deleting message from the SQS... for task [{}] {}".format(
                 task["task_id"], response))
-        print(f"try to delete :{sqs_msg['id']}")
         tasks_queue.deleteMessage(id=sqs_msg['id']).execute()
         #sqs_msg.delete()
 
