@@ -16,6 +16,8 @@ import sys
 import base64
 import asyncio
 from botocore import endpoint
+from rsmq import RedisSMQ
+from rsmq.cmd.exceptions import QueueAlreadyExists
 import requests
 from functools import partial
 from aws_xray_sdk.core import xray_recorder
@@ -86,9 +88,17 @@ except KeyError:
     pass
 
 # TODO - retreive the endpoint url from Terraform
-sqs = boto3.resource('sqs', endpoint_url=agent_config_data['sqs_endpoint'], region_name=region)
+#sqs = boto3.resource('sqs', endpoint_url=agent_config_data['sqs_endpoint'], region_name=region)
 # sqs = boto3.resource('sqs', region_name=region)
-tasks_queue = sqs.get_queue_by_name(QueueName=agent_config_data['sqs_queue'])
+tasks_queue = RedisSMQ(
+    host=agent_config_data['sqs_endpoint'],
+    port=agent_config_data['rsmq_port'],
+    qname=agent_config_data['sqs_queue'])
+try:
+    tasks_queue.createQueue(delay=0, vt=40).execute()
+except QueueAlreadyExists:
+    pass
+#tasks_queue = sqs.get_queue_by_name(QueueName=agent_config_data['sqs_queue'])
 
 
 lambda_cfg = botocore.config.Config(retries={'max_attempts': 3}, read_timeout=2000, connect_timeout=2000,
@@ -211,37 +221,41 @@ def try_to_acquire_a_task():
     """
     global AGENT_EXEC_TIMESTAMP_MS
     logging.info("waiting for SQS message")
-    messages = tasks_queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=10)
-
+    # messages = tasks_queue.receive_messages(MaxNumberOfMessages=1, WaitTimeSeconds=10)
+    messages = tasks_queue.receiveMessage(quiet=True).exceptions(False).execute()
     task_pick_up_from_sqs_ms = get_time_now_ms()
 
     logging.info("try_to_acquire_a_task, message: {}".format(messages))
     # print(len(messages))
 
-    if len(messages) == 0:
+    if not messages:
         event_counter_pre.increment("agent_no_messages_in_tasks_queue")
         return None, None
 
-    message = messages[0]
+    message = json.loads(messages['message'])
+    message['id'] = messages['id']
+    #message = messages[0]
     AGENT_EXEC_TIMESTAMP_MS = get_time_now_ms()
 
-    task = json.loads(message.body)
+    task = json.loads(message['MessageBody'])
+    #task = json.loads(message.body)
     logging.info("try_to_acquire_a_task, task: {}".format(task))
 
     # Since we read this message from the queue, now we need to associate an
     # sqs handler with this message, to be able to delete it later
-    task["sqs_handle_id"] = message.receipt_handle
+    task["sqs_handle_id"] = messages['id']
     try:
         result, response, error = ddb.claim_task_to_yourself(
             status_table, task, SELF_ID, ttl_gen.generate_next_ttl().get_next_expiration_timestamp())
         logging.info("DDB claim_task_to_yourself result: {} {}".format(result, response))
-
+        
         if not result:
             event_counter_pre.increment("agent_failed_to_claim_ddb_task")
 
             if is_task_has_been_cancelled(task["task_id"]):
                 logging.info("Task [{}] has been already cancelled, skipping".format(task['task_id']))
-                message.delete()
+                tasks_queue.deleteMessage(id=messages['id']).execute()
+                #message.delete()
                 return None, None
 
             else:
@@ -255,7 +269,9 @@ def try_to_acquire_a_task():
         raise error_acquiring
         # if e.response['Error']['Code'] == 'ResourceNotFoundException':
     # If we have succesfully ackquired a message we should change its visibility timeout
-    message.change_visibility(VisibilityTimeout=agent_sqs_visibility_timeout_sec)
+    #message.change_visibility(VisibilityTimeout=agent_sqs_visibility_timeout_sec)
+    tasks_queue.changeMessageVisibility(vt=agent_sqs_visibility_timeout_sec,
+                                        id=messages['id']).execute()
     task["stats"]["stage3_agent_01_task_acquired_sqs_tstmp"]["tstmp"] = task_pick_up_from_sqs_ms
 
     task["stats"]["stage3_agent_02_task_acquired_ddb_tstmp"]["tstmp"] = get_time_now_ms()
@@ -310,7 +326,7 @@ def process_subprocess_completion(perf_tracker, task, sqs_msg, fname_stdout, std
             continue
         else:
             break
-
+    print(f"check if ddb_res:{ddb_res}")
     if not ddb_res:
         # We can get here if task has been taken over by the watchdog lambda
         # in this case we ignore results and proceed to the next task.
@@ -323,7 +339,9 @@ def process_subprocess_completion(perf_tracker, task, sqs_msg, fname_stdout, std
             "We have succesfully marked task as completed in dynamodb."
             " Deleting message from the SQS... for task [{}] {}".format(
                 task["task_id"], response))
-        sqs_msg.delete()
+        print(f"try to delete :{sqs_msg['id']}")
+        tasks_queue.deleteMessage(id=sqs_msg['id']).execute()
+        #sqs_msg.delete()
 
     logging.info("Exec time1: {} {}".format(get_time_now_ms() - AGENT_EXEC_TIMESTAMP_MS, AGENT_EXEC_TIMESTAMP_MS))
     event_counter_post.increment("agent_total_time_ms", get_time_now_ms() - AGENT_EXEC_TIMESTAMP_MS)
@@ -518,8 +536,10 @@ def event_loop():
     logging.info("Starting main event loop")
     killer = GracefulKiller()
     while not killer.kill_now:
-
+        print("try_to_acquire_task")
         sqs_msg, task = try_to_acquire_a_task()
+        print("finish try_to_acquire_task")
+        print(f"sqs_msg: {sqs_msg}")
 
         if task is not None:
             asyncio.run(run_task(task, sqs_msg))
