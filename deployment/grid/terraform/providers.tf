@@ -89,5 +89,6 @@ provider "aws" {
     cloudwatchevents = "http://localhost:${var.local_services_port}"
     s3 = "http://localhost:${var.local_services_port}"
     apigateway = "http://localhost:${var.local_services_port}"
+    sqs = "http://localhost:${var.local_services_port}"
   }
 }
