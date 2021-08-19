@@ -10,7 +10,6 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(filename)s - %(funcN
 
 class QueueRSMQ:
 
-
     def __init__(self, endpoint_url, queue_name, region):
         # Connection + Authentication
 
@@ -29,7 +28,7 @@ class QueueRSMQ:
 
         try:
 
-            self.queue = rsmq.RedisSMQ(host=self.host, port=self.port, qname=queue_name)
+            self.queue = rsmq.RedisSMQ(host=self.host, port=self.port, qname=self.queue_name)
             self.queue.createQueue(vt=40, delay=0).execute()
 
         except rsmq.cmd.exceptions.QueueAlreadyExists:
@@ -44,7 +43,7 @@ class QueueRSMQ:
         return response
 
     # Single write &  Batch write
-    def send_messages(self, message_bodies=[]):
+    def send_messages(self, message_bodies=[], message_attributes={}):
         responses = {
             'Successful': [],
             'Failed': [],
@@ -52,10 +51,10 @@ class QueueRSMQ:
 
         for body in message_bodies:
             try:
-                id = self.queue.send_message(body)
+                id = self.send_message(body)
                 responses['Successful'].append(id)
             except Exception:
-                responses['Failed'].append(id)
+                responses['Failed'].append(body)
         return responses
 
         # return {
@@ -73,7 +72,7 @@ class QueueRSMQ:
 
     def receive_message(self, wait_time_sec=0):
 
-        messages = self.receiveMessage(quiet=True).exceptions(False).execute()
+        messages = self.queue.receiveMessage(quiet=True).exceptions(False).execute()
 
         if not messages:
             # No messages were returned
@@ -130,11 +129,9 @@ class QueueRSMQ:
             errlog.log("Cannot reset VTO for message {} : {}".format(message_handle_id, e))
             raise e
 
-
         return None
 
-
     def get_queue_length(self):
-        queue_length = int(self.queue.getQueueAttributes()['msgs'])
+        queue_length = int(self.queue.getQueueAttributes().execute()['msgs'])
         # print(f"Number of messages in the queue {queue_length}")
         return queue_length
