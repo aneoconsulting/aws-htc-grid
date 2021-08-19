@@ -208,7 +208,9 @@ class AWSConnector:
                 self.in_out_manager.put_input_from_bytes(task_id, b64data)
 
                 # We are no longer passing the actual task definition
-                binary_tasks_list.append("passed_via_storage_size_{}_bytes".format(sys.getsizeof(data)))
+                binary_tasks_list.append(task_id)
+                #binary_tasks_list.append("passed_via_storage_size_{}_bytes".format(sys.getsizeof(data)))
+
 
         # creation message with tasks_list
         user_task_json = {
