@@ -6,6 +6,8 @@
 resource "aws_sqs_queue" "htc_task_queue" {
   name = var.sqs_queue
 
+  count =  (var.grid_queue_service == "SQS" || var.grid_queue_service == "PrioritySQS") ? 1 : 0
+
   message_retention_seconds = 1209600 # max 14 days
   visibility_timeout_seconds = 40  # once acquired we should update visibility timeout during processing
 
@@ -19,6 +21,8 @@ resource "aws_sqs_queue" "htc_task_queue" {
 
 resource "aws_sqs_queue" "htc_task_queue_dlq" {
   name = var.sqs_dlq
+
+  count =  (var.grid_queue_service == "SQS" || var.grid_queue_service == "PrioritySQS") ? 1 : 0
 
   message_retention_seconds = 1209600 # max 14 days
 

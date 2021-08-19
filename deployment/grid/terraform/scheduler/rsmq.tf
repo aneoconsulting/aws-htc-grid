@@ -1,4 +1,7 @@
 resource "kubernetes_deployment" "rsmq" {
+
+  count =  var.grid_queue_service == "RSMQ" ? 1 : 0
+
   metadata {
     name      = "rsmq"
     labels = {
@@ -50,6 +53,9 @@ resource "kubernetes_deployment" "rsmq" {
 
 
 resource "kubernetes_service" "rsmq" {
+
+  count =  var.grid_queue_service == "RSMQ" ? 1 : 0
+
   metadata {
     name = "rsmq"
   }
