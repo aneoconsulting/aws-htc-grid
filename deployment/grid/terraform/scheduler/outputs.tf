@@ -25,7 +25,7 @@ output "s3_bucket_name" {
 #}
 #
 #
-#output "api_gateway_key" {
-#  value = aws_api_gateway_api_key.htc_grid_api_key.value
-#  sensitive = true
-#}
+output "api_gateway_key" {
+  value = "mock"
+  sensitive = true
+}
