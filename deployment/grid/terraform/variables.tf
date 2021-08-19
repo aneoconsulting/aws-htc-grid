@@ -199,6 +199,25 @@ variable "namespace_metrics" {
   description = "NameSpace for metrics"
 }
 
+variable "grid_queue_service" {
+  default = "RSMQ"
+  description = "Configuration string for the type of queuing service to be used"
+}
+
+variable "grid_queue_config" {
+  default = "{'sample':5}"
+  description = "dictionary queue config"
+}
+
+variable "tasks_status_table_config" {
+  default = "{'sample':5}"
+  description = "Custom configuration for status table"
+}
+
+variable "tasks_status_table_service" {
+  default  = "DynamoDB"
+  description = "Status table sertvice"
+}
 
 variable "dimension_name_metrics" {
   default  = "cluster_name"
@@ -484,4 +503,21 @@ variable "ttl_checker_port" {
 variable "ttl_checker_image" {
   description = "Name of ttl_checker Lambda RIE image"
   type = string
+}
+
+variable "rsmq_port" {
+  description = "Port for Redis SMQ"
+  type = number
+  default = 6380
+}
+
+variable "dynamodb_endpoint_url" {
+  description = "dynamodb endpoint url"
+  type = string
+  default = "http://dynamodb"
+}
+
+variable sqs_endpoint_url {
+  description = "URL for SQS endpoint"
+  default = "rsmq"
 }

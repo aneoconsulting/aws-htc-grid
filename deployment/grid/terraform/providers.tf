@@ -83,7 +83,6 @@ provider "aws" {
 
   endpoints {
     dynamodb = "http://localhost:${var.dynamodb_port}"
-    lambda = "http://localhost:${var.local_services_port}"
     iam = "http://localhost:${var.local_services_port}"
     cloudwatch = "http://localhost:${var.local_services_port}"
     cloudwatchlogs = "http://localhost:${var.local_services_port}"

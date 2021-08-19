@@ -5,8 +5,8 @@ locals {
   agent_config =<<EOF
 {
   "region": "${var.region}",
-  "sqs_endpoint": "http://local-services:${var.local_services_port}",
-  "dynamodb_endpoint": "http://dynamodb:${var.dynamodb_port}",
+  "sqs_endpoint": "${var.sqs_endpoint_url}:${var.rsmq_port}",
+  "dynamodb_endpoint": "${var.dynamodb_endpoint_url}:${var.dynamodb_port}",
   "sqs_queue": "${local.sqs_queue}",
   "sqs_dlq": "${local.sqs_dlq}",
   "redis_url": "${module.scheduler.redis_url}",
@@ -25,6 +25,11 @@ locals {
   "lambda_name_cancel_tasks": "${local.lambda_name_cancel_tasks}",
   "s3_bucket": "${module.scheduler.s3_bucket_name}",
   "grid_storage_service" : "${var.grid_storage_service}",
+  "grid_queue_service" : "${var.grid_queue_service}",
+  "grid_queue_config" : "${var.grid_queue_config}",
+  "tasks_status_table_service" : "${var.tasks_status_table_service}",
+  "tasks_status_table_config" : "${var.tasks_status_table_config}",
+  "tasks_queue_name": "${local.tasks_queue_name}",
   "htc_path_logs" : "${var.htc_path_logs}",
   "error_log_group" : "${local.error_log_group}",
   "error_logging_stream" : "${local.error_logging_stream}",
@@ -39,7 +44,7 @@ locals {
   "agent_use_congestion_control": "${var.agent_use_congestion_control}",
   "public_api_gateway_url": "http://ingress-nginx-controller.ingress-nginx:80",
   "private_api_gateway_url": "http://ingress-nginx-controller.ingress-nginx:80",
-  "api_gateway_key": "mock",
+  "api_gateway_key": "${module.scheduler.api_gateway_key}",
   "enable_xray": "${var.enable_xray}",
   "user_pool_id": "mock",
   "cognito_userpool_client_id": "mock",
@@ -58,7 +63,7 @@ resource "kubernetes_config_map" "htcagentconfig" {
   }
 
   data = {
-     "Agent_config.tfvars.json" = local.agent_config
+    "Agent_config.tfvars.json" = local.agent_config
   }
   depends_on = [
     module.resources,
@@ -74,7 +79,7 @@ resource "kubernetes_config_map" "htcagentconfig" {
   }
 
   data = {
-     "Agent_config.tfvars.json" = local.agent_config
+    "Agent_config.tfvars.json" = local.agent_config
   }
   depends_on = [
     module.resources,

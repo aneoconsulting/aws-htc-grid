@@ -5,8 +5,8 @@ resource "kubernetes_config_map" "lambda_local" {
 
   data = {
     TASKS_STATUS_TABLE_NAME=aws_dynamodb_table.htc_tasks_status_table.name,
-    TASKS_QUEUE_NAME=aws_sqs_queue.htc_task_queue.name,
-    TASKS_QUEUE_DLQ_NAME=aws_sqs_queue.htc_task_queue_dlq.name,
+    TASKS_QUEUE_NAME=var.tasks_queue_name,
+    TASKS_QUEUE_DLQ_NAME=var.sqs_dlq,
     METRICS_ARE_ENABLED=var.metrics_are_enabled,
     ERROR_LOG_GROUP=var.error_log_group,
     ERROR_LOGGING_STREAM=var.error_logging_stream,
@@ -18,12 +18,18 @@ resource "kubernetes_config_map" "lambda_local" {
     REGION = var.region,
     AWS_DEFAULT_REGION = var.region,
     SQS_PORT = var.local_services_port,
+    DYNAMODB_ENDPOINT_URL = "${var.dynamodb_endpoint_url}:${var.dynamodb_port}",
     DYNAMODB_PORT = var.dynamodb_port,
     USERNAME = var.access_key,
     PASSWORD = var.secret_key,
     AWS_ACCESS_KEY_ID = var.access_key,
     AWS_SECRET_ACCESS_KEY = var.secret_key,
     AWS_LAMBDA_FUNCTION_TIMEOUT = var.lambda_timeout,
+    SQS_ENDPOINT_URL = "${var.sqs_endpoint_url}:${var.rsmq_port}",
+    GRID_QUEUE_SERVICE = var.grid_queue_service,
+    GRID_QUEUE_CONFIG = var.grid_queue_config,
+    TASKS_STATUS_TABLE_SERVICE = var.tasks_status_table_service,
+    TASKS_STATUS_TABLE_CONFIG = var.tasks_status_table_config,
   }
 }
 

@@ -34,6 +34,29 @@ variable "sqs_queue" {
   description = "HTC SQS queue name"
 }
 
+variable "tasks_queue_name" {
+  description = "HTC queue name"
+}
+
+variable "grid_queue_service" {
+  description = "Grid queue service"
+}
+
+variable "grid_queue_config" {
+  default = "{'sample':5}"
+  description = "dictionary queue config"
+}
+
+variable "tasks_status_table_config" {
+  default = "{'sample':5}"
+  description = "Custom configuration for status table"
+}
+
+variable "tasks_status_table_service" {
+  default = "DynamoDB"
+  description = "Status table service"
+}
+
 variable "sqs_dlq" {
   description = "HTC SQS queue dlq name"
 }
@@ -175,6 +198,10 @@ variable "dynamodb_port" {
   description = "dynamodb port"
 }
 
+variable "dynamodb_endpoint_url" {
+  description = "dynamodb endpoint url"
+}
+
 variable "local_services_port" {
   description = "Port for all local services"
 }
@@ -213,4 +240,12 @@ variable "ttl_checker_port" {
 
 variable "ttl_checker_image" {
   description = "Name of ttl_checker Lambda RIE image"
+}
+
+variable "rsmq_port" {
+  description = "Port for Redis SMQ"
+}
+
+variable "sqs_endpoint_url" {
+  description = "URL for SQS endpoint"
 }

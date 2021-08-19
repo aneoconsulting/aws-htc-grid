@@ -27,6 +27,7 @@ locals {
     config_name = "${var.config_name}-${local.project_name}"
     s3_bucket = "${var.s3_bucket}-${local.project_name}"
     error_log_group = "${var.error_log_group}-${local.project_name}"
+    tasks_queue_name = "${var.sqs_queue}-${local.project_name}__0"
     error_logging_stream = "${var.error_logging_stream}-${local.project_name}"
 
     default_agent_configuration = {
@@ -134,6 +135,7 @@ module "scheduler" {
     aws_htc_ecr = local.aws_htc_ecr
     ddb_status_table = local.ddb_status_table
     sqs_queue = local.sqs_queue
+    tasks_queue_name = local.tasks_queue_name
     sqs_dlq = local.sqs_dlq
     s3_bucket = local.s3_bucket
     grid_storage_service = var.grid_storage_service
@@ -171,6 +173,13 @@ module "scheduler" {
     get_results_port = var.get_results_port
     ttl_checker_image = var.ttl_checker_image
     ttl_checker_port = var.ttl_checker_port
+    rsmq_port = var.rsmq_port
+    dynamodb_endpoint_url = var.dynamodb_endpoint_url
+    tasks_status_table_service = var.tasks_status_table_service
+    tasks_status_table_config = var.tasks_status_table_config
+    grid_queue_service = var.grid_queue_service
+    grid_queue_config = var.grid_queue_config
+    sqs_endpoint_url = var.sqs_endpoint_url
 }
 
 
